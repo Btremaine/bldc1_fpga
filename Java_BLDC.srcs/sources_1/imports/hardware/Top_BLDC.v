@@ -79,6 +79,8 @@ assign RESET_N = 1'b1;
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 `endif 
 // --------------------------------------------------------------------
+parameter MODPH = 1'h1;    // true to output modulo Pi phase
+
 parameter FSZE = 6;        // bits allocated to fraction for pwm
 parameter FFPT = 6;        // floating point bits for compensator
 parameter Af = 6'h3d;      // 61
@@ -140,6 +142,7 @@ wire [WIDTH-1:0] pwm_in;
 wire pwm1;
 wire pwm2;
 wire [WIDTH-1:0] dphase;
+wire select_mod;
 
 // instantiate rst_gen
    rst_gen rst_gen1(
@@ -183,6 +186,7 @@ wire [WIDTH-1:0] dphase;
 	   .fb_phase   		(fgIn_sync),    // input feedback phase
 	   .delay_len  		(win_delay_360),// user reg, window delay count
 	   .width_win  		(win_width),	// user reg, window width count
+	   .mod_pi          (~select_mod),        // flag to calulate modulo Pi phase
 	   // outputs
 	   .sample_out      (sample),
 	   .err        		(Err),          // error count
@@ -231,6 +235,7 @@ wire [WIDTH-1:0] dphase;
 	.fb_phase   		(fg60),         // input feedback phase
 	.delay_len  		(win_delay_60),	// user reg, window delay count
 	.width_win  		(win_width),	// user reg, window width count
+	.mod_pi             (select_mod),        // flag to calulate modulo Pi phase
 	// outputs
 	.sample_out         (sample2),
 	.err        		(Err2),        // phase error count
@@ -268,7 +273,7 @@ wire [WIDTH-1:0] dphase;
 	.q_out                  (Fref360)
     );
 
-
+assign select_mod = MODPH;
 assign Venable = 1'h1;  // set comp Venable
 assign pwm1o = pwm1;	// set pwmo 
 assign pwm2o = pwm2;    // set pwm2o

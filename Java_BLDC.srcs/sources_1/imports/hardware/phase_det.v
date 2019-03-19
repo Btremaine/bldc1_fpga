@@ -27,6 +27,7 @@ module phase_det #(parameter WIDTH_TMR=21, WIDTH_ERR=22) (
 	input	fb_phase,
 	input [WIDTH_TMR-1:0] delay_len,
 	input [9:0] width_win,
+	input   mod_pi,
 	// output
 	output sample_out,
 	output signed [WIDTH_ERR-1:0] err,
@@ -79,9 +80,11 @@ wire fb_posedge;
 wire clr_ttimer;
 wire setMIP;
 wire clrMIP;
+wire select_mod;
 
 // assign's go here
-assign err = Err_R; // Err_mod;          
+assign select_mod = mod_pi;
+assign err = (select_mod == 1'h1)? Err_mod : Err_R;          
 assign W = (Win_cntr != 0)? 1'b1 : 1'b0;
 assign reset = ~sync_rst_n;
 assign clr_pd = ((pu & pd) || RST)? 1'b1 : 1'b0;

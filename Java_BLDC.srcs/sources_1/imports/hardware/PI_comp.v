@@ -161,6 +161,7 @@ assign int_lim_sgnd = integ_lim;
 	end	
 // ----------------------------------------------------------------------------------
 // debug
+/*
 ila_1 PI_comp_dbg (
 	.clk(sys_clk), // input wire clk
 
@@ -183,6 +184,7 @@ ila_1 PI_comp_dbg (
 	.probe14(result2),     // 24
 	.probe15(result3)      // 24
 );
+*/
 	
 	
 endmodule
