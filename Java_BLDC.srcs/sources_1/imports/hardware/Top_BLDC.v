@@ -85,7 +85,7 @@ parameter FSZE = 6;        // bits allocated to fraction for pwm
 parameter FFPT = 6;        // floating point bits for compensator
 parameter Af = 6'h3d;      // 61
 parameter Bf = 6'h30;      // 48
-parameter K0 = 7'h7f;      // 127
+parameter K0 = 8'h7f;      // 127
 
 parameter Ki = 7'h03;      //  3 unsigned
 parameter Kp = 7'h10;      // 16 unsigned
@@ -100,7 +100,7 @@ parameter WIDTH=17;
 parameter WIDTH_ERR=22;
 parameter Nref = 833333; 	// 20'hCB735 Fref60 period, 60.0Hz using 50MHz clock
 parameter N0 = 8000; 		// 13'h1F40 pwm period 25kHz
-parameter M0 = 3800; 		// pwm default center point @Me==0
+parameter M0 = 4400; 		// pwm default center point @Me==0
 parameter N1 = 555555;      // divider 200MHz to 360Hz in fractional divider
 parameter N360 = 138888;    // divider 50MHz for 360Hz inner loop debug
 
@@ -136,6 +136,7 @@ wire win_open;
 wire fgIn_sync;
 wire Fref360;
 wire Ref360;
+wire Refin;
 wire fgFb;
 wire fg60;
 wire [WIDTH-1:0] pwm_in;
@@ -182,7 +183,7 @@ wire select_mod;
 	   // inputs
 	   .clk        		(sp_clk),		// master clock source
 	   .sync_rst_n 		(sync_rst_n),	// synchronized reset
-	   .ref_phase  		(Fref360),		// input raw vsync
+	   .ref_phase  		(Refin),		// input 360Hz ref to inner loop
 	   .fb_phase   		(fgIn_sync),    // input feedback phase
 	   .delay_len  		(win_delay_360),// user reg, window delay count
 	   .width_win  		(win_width),	// user reg, window width count
@@ -280,7 +281,7 @@ assign pwm2o = pwm2;    // set pwm2o
 
 assign D0 = fgFb;       // feedback from motor after debounce
 assign D1 = fg60;
-assign D2 = Fref360;    // ref 360Hz Fref360, debug Ref360
+assign D2 = Refin;    // ref 360Hz Fref360, debug Ref360
 assign D3 = pd_error;
 assign Test_LED1 = pd_error;
 assign Test_LED2 = win_open;
@@ -290,7 +291,6 @@ assign dphase = (~Me2+1);           // polarity for fractional divider
 assign fgFb = fgIn_sync;
 assign Fref60 = (M < (Nref>>1) ) ? 1'b1: 1'b0;      // generate Fref60
 assign Ref360 = (M360 < (N360>>1) ) ? 1'b1: 1'b0;   // generate Ref360
-
 
 	always @ (posedge sp_clk) begin
 		m0 <= M0;
@@ -321,20 +321,25 @@ assign Ref360 = (M360 < (N360>>1) ) ? 1'b1: 1'b0;   // generate Ref360
 		end
 	end
 
-// Inner loop debug	
-//    // Ref360 for inner loop debug
-//	always @(posedge sp_clk) begin
-//		if(~sync_rst_n) begin
-//		   M360 <= N360;
-//		end else begin
-//		   if (M360==1)
-//			  M360 <= N360;
-//			else
-//			  M360 <= M360 - 1'b1;
-//		end
-//	end
-	
-	
+
+`define debug 
+`undef debug
+`ifdef debug
+    // Ref360 for inner loop debug
+    assign Refin = Ref360;
+	always @(posedge sp_clk) begin
+		if(~sync_rst_n) begin
+		   M360 <= N360;
+		end else begin
+		   if (M360==1)
+			  M360 <= N360;
+			else
+			  M360 <= M360 - 1'b1;
+		end
+	end
+`else
+    assign Refin = Fref360;
+`endif
     // --------------------------------------------------------------
 			
 endmodule
